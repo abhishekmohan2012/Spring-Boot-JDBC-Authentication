@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
 
@@ -19,31 +21,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication()
-                .dataSource(dataSource)
-                .withDefaultSchema()
-                .withUser(
-                        User.withUsername("commonuser")
-                        .password(bCryptPasswordEncoder().encode("password1"))
-                        .roles("user")
-                )
-                .withUser(
-                        User.withUsername("privilegedUser")
-                                .password(bCryptPasswordEncoder().encode("password2"))
-                                .roles("privilege")
-                )
-                .withUser(
-                        User.withUsername("admin")
-                                .password(bCryptPasswordEncoder().encode("admin123"))
-                                .roles("admin")
-                );
+                .dataSource(dataSource);
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/admin/**").hasRole("admin")
-                .antMatchers("/specialOffer/**").hasAnyRole("admin","privilege")
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/specialOffer/**").hasAnyRole("ADMIN","PRIVILEGE")
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -53,7 +39,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    public PasswordEncoder getPasswordEncoder(){
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+   /* @Bean
     BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
-    }
+    }*/
+
 }
